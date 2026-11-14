@@ -1,0 +1,53 @@
+{
+  "classification": "DATOS SINTÉTICOS DE PRUEBA — NO CORRESPONDEN A PERSONAS NI OPERACIONES REALES",
+  "employees": [
+    {
+      "code": "DEMO-001",
+      "name": "Persona Ficticia Uno",
+      "position": "Auxiliar de prueba",
+      "department": "Obra demostrativa"
+    }
+  ],
+  "attendance": [
+    {
+      "employee_code": "DEMO-001",
+      "work_date": "2026-10-25",
+      "entry_time": "08:00",
+      "exit_time": "17:00"
+    }
+  ],
+  "permissions": [
+    {
+      "requested_on": "2026-10-20",
+      "start_date": "2026-10-25",
+      "start_time": "09:00",
+      "end_date": "2026-10-25",
+      "end_time": "11:00",
+      "permission_type": "Otro",
+      "reason": "Motivo sintético de prueba",
+      "remunerated": "No remunerado",
+      "duration_hours": 2,
+      "duration_days": 0.5,
+      "applicant_signed": true,
+      "manager_approval_recorded": false
+    }
+  ],
+  "overtime": [
+    {
+      "work_date": "2026-10-26",
+      "start_time": "18:00",
+      "end_time": "20:00",
+      "hours": 2,
+      "total_hours": 9,
+      "sunday_holiday": "Dato sintético: domingos y festivos",
+      "reported_surcharge": "Dato de prueba sin cálculo",
+      "lunch_hour_worked": false,
+      "shift_type": "Nocturna",
+      "activity": "Actividad sintética de prueba",
+      "period": "Periodo ficticio octubre 2026",
+      "authorized": true,
+      "authorized_by": "Responsable ficticio",
+      "approved_by": "Supervisor ficticio"
+    }
+  ]
+}
