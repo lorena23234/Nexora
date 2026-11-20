@@ -226,12 +226,10 @@ laborales al entorno de pruebas.
 ```
 
 Instala `requirements.txt` antes de ejecutar la suite. Las pruebas usan bases
-de datos temporales y registros ficticios. La ejecución de `python -m pytest -q`
-tras consolidar Tkinter y añadir las pruebas de empleados e iconos finalizó
-con **56 aprobadas, 0 fallidas** en un entorno local con Python 3.14.7. Se instaló
-`requirements.txt` en un entorno virtual temporal limpio y `pip check` no
-reportó dependencias rotas. Los resultados son pruebas automatizadas; no
-equivalen a validación manual con usuarios.
+de datos temporales y registros ficticios. La ejecución local más reciente de
+`python -m pytest -q` finalizó con **67 aprobadas, 0 fallidas y 0 omitidas**.
+Los resultados son pruebas automatizadas; no equivalen a validación manual con
+usuarios ni a las ejecuciones realizadas en otros entornos.
 Los casos representativos y sus resultados incluyen:
 
 | Caso | Entrada sintética | Resultado esperado y observado |
@@ -243,6 +241,9 @@ Los casos representativos y sus resultados incluyen:
 | CP-05 | Solicitud de permiso ficticia en estado pendiente | Se guarda y se muestra para revisión, sin dar por registrada una aprobación; aprobado. |
 | CP-06 | Hora extra ficticia sin autorización registrada | Se genera una alerta; no se calcula recargo ni pago; aprobado. |
 | CP-07 | Exportación de registros y observaciones sintéticas | Se conserva el resultado de consulta en CSV/Excel; aprobado. |
+| CP-08 | Entrada sintética 22:00 y salida 06:00 | Se conserva la fecha y las horas; se advierte que puede ser un cruce de medianoche o una inconsistencia, sin cambiar el dato; aprobado automáticamente. La interpretación operativa sigue pendiente. |
+| CP-09 | Dos intervalos distintos del mismo empleado y día | Se conservan ambos sin marcarlos como duplicados exactos; aprobado automáticamente. La legitimidad del caso debe confirmarla quien administra el proceso. |
+| CP-10 | Importación de horas con espacios en el valor original | La consulta usa la hora normalizada y la trazabilidad conserva el valor original importado; aprobado automáticamente. |
 
 La suite también cubre mapeo, vista previa y trazabilidad minimizada de
 importaciones sintéticas, exclusión de columnas personales, normalización no
@@ -260,9 +261,15 @@ entorno local controlado; no son pruebas con datos reales ni validación con
 usuarios o en el entorno de la empresa. No se ha realizado una prueba manual
 integral de la interfaz de escritorio en esta actualización.
 
+La aplicación no ofrece una operación para editar una marcación existente.
+En importaciones se conserva el valor original junto al valor normalizado; la
+forma de registrar una corrección después de importar requiere una decisión
+documentada del responsable del proceso antes de implementar o aceptar ese
+flujo.
+
 ### Limitaciones de validación y estado TRL
 
-No se declara alcanzado ni certificado TRL 5. Las 56 pruebas automatizadas se
+No se declara alcanzado ni certificado TRL 5. Las 67 pruebas automatizadas se
 ejecutan localmente con datos sintéticos; por sí solas no demuestran validación
 en un entorno relevante. La evaluación de Fase 3 ubicó el trabajo cerca de TRL 2,
 en avance hacia TRL 3. La implementación y las pruebas locales actuales aportan
@@ -325,13 +332,27 @@ interfaces, implementar los incrementos y operar/evaluar el prototipo en un
 entorno controlado. Las pruebas actuales sustentan solo comportamiento local
 con datos sintéticos; no acreditan por sí mismas un nivel TRL.
 
-## Preparación para GitHub
+## Seguimiento de la retroalimentación del tutor
 
-El proyecto está preparado para una revisión local, no publicado ni conectado a
-un remoto. `.gitignore` excluye bases y carpetas locales, exportaciones,
+| Tema | Evidencia automatizada disponible | Pendiente de validación |
+|---|---|---|
+| Jornada que cruza medianoche | Caso sintético 22:00–06:00: se conserva la fecha informada y se genera una alerta neutral; no se deduce otra fecha. | Acordar con la persona responsable cómo interpretar la jornada y registrar la decisión del usuario. |
+| Repetición legítima y duplicidad | Los registros exactos coincidentes se conservan y señalan; dos intervalos distintos en el día no se clasifican como duplicados exactos. | Confirmar los criterios del proceso para repetición legítima y duplicados. |
+| Corrección de registros | La importación conserva valores originales y normalizados. La interfaz no incluye edición de marcaciones. | Definir un flujo de corrección trazable y validarlo antes de implementarlo o usarlo. |
+| Recorrido de interfaz y recuperación | Hay cobertura automatizada de importación, vista previa, persistencia, consultas y exportaciones. | Sigue pendiente una sesión manual observada de extremo a extremo y acordar acceso, respaldo y recuperación de la base local. |
+| Validación y aceptación | Pruebas automatizadas locales con datos sintéticos. | Sesión autorizada con usuarios representativos en un entorno pertinente; registrar observaciones, defectos, ajustes y aceptación real. |
+| Aportes por incremento | La matriz técnica enlaza incrementos con requisitos y pruebas. | Deisy y Lina deben confirmar sus aportes individuales y evidencias; no se atribuyen actividades sin confirmación. |
+| Entregables | El código está en el [repositorio público de NEXORA HR](https://github.com/lorena23234/Nexora). | El video de hasta 10 minutos y su enlace siguen pendientes. |
+
+Las pruebas nuevas o automatizadas no sustituyen el recorrido manual ni la
+validación con usuarios. El estado TRL 5 no se declara demostrado.
+
+## Repositorio de GitHub
+
+El código fuente, las dependencias declaradas y las pruebas sintéticas están
+publicados en el repositorio público
+[lorena23234/Nexora](https://github.com/lorena23234/Nexora), en la rama
+`master`. `.gitignore` excluye bases y carpetas locales, exportaciones,
 documentos de oficina, grabaciones y subtítulos, archivos temporales,
-credenciales y entornos virtuales.
-Antes de crear un remoto, revisa el contenido que se agregaría y confirma que
-solo incluya código, dependencias declaradas, pruebas sintéticas e iconos con
-licencia. No agregues bases locales, fuentes documentales, registros reales ni
-evidencias del video.
+credenciales y entornos virtuales. No se publican bases de datos locales,
+fuentes documentales ni registros reales.

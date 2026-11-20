@@ -256,6 +256,41 @@ def test_attendance_duplicates_flag_both_rows_without_deleting(database, employe
     )
 
 
+def test_overnight_attendance_is_flagged_without_changing_reported_values(
+    database, employee
+):
+    service = AttendanceService(database)
+    service.add("TEST-001", "2026-10-25", "22:00", "06:00")
+
+    record = service.list()[0]
+
+    assert record["employee_id"] == employee
+    assert record["work_date"] == "2026-10-25"
+    assert record["entry_time"] == "22:00"
+    assert record["exit_time"] == "06:00"
+    assert (
+        "La salida es anterior a la entrada; posible cruce de medianoche "
+        "o inconsistencia, verificar jornada"
+    ) in record["alerts"]
+
+
+def test_distinct_same_day_attendance_periods_are_not_flagged_as_duplicates(
+    database, employee
+):
+    service = AttendanceService(database)
+    service.add("TEST-001", "2026-10-25", "08:00", "12:00")
+    service.add("TEST-001", "2026-10-25", "13:00", "17:00")
+
+    records = service.list()
+
+    assert len(records) == 2
+    assert all(
+        "Posible duplicidad: registro coincidente" not in record["alerts"]
+        for record in records
+    )
+    assert {record["entry_time"] for record in records} == {"08:00", "13:00"}
+
+
 def test_attendance_delete_removes_only_selected_row(database, employee):
     service = AttendanceService(database)
     first_id = service.add("TEST-001", "2026-10-25", "08:00", "17:00")
@@ -277,7 +312,10 @@ def test_attendance_flags_invalid_and_inconsistent_values(database):
     alerts = service.list()[0]["alerts"]
     assert "Código sin empleado asociado" in alerts
     assert "Fecha no reconocida (use AAAA-MM-DD)" in alerts
-    assert "La salida es anterior a la entrada; verificar jornada" in alerts
+    assert (
+        "La salida es anterior a la entrada; posible cruce de medianoche "
+        "o inconsistencia, verificar jornada"
+    ) in alerts
 
 
 def test_csv_import_associates_known_code_and_preserves_unknown(tmp_path, database, employee):
@@ -364,7 +402,7 @@ def test_import_preview_mapping_duplicates_and_source_traceability(
     )
     imported = database.fetch_one(
         """
-        SELECT source_row, raw_data, import_batch_id
+        SELECT source_row, raw_data, import_batch_id, entry_time
         FROM attendance
         WHERE import_batch_id = ? AND source_row = ?
         """,
@@ -382,6 +420,7 @@ def test_import_preview_mapping_duplicates_and_source_traceability(
     assert imported_record["source"] == "Transcripción documental"
     assert original["row"]["Entrada"] == " 08:00 "
     assert original["row"]["_original_row"][2] == " 08:00 "
+    assert imported["entry_time"] == "08:00"
     assert employee > 0
 
 

@@ -50,7 +50,10 @@ def attendance_alerts(record: dict[str, Any]) -> list[str]:
         if entry == exit_time:
             alerts.append("Entrada y salida tienen la misma hora")
         elif exit_time < entry and record.get("work_date"):
-            alerts.append("La salida es anterior a la entrada; verificar jornada")
+            alerts.append(
+                "La salida es anterior a la entrada; posible cruce de medianoche "
+                "o inconsistencia, verificar jornada"
+            )
     return alerts
 
 
