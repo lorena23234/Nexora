@@ -379,7 +379,7 @@ con datos sintéticos; no acreditan por sí mismas un nivel TRL.
 | Respaldo y recuperación | Se ejecutó una copia y restauración SQLite en una base temporal sintética; `integrity_check` dio `ok` y se recuperaron 1 empleado, 3 asistencias y 1 lote. | Acordar acceso y retención con el responsable; la prueba no fue una recuperación manual de la interfaz ni de datos de producción. |
 | Validación y aceptación | Pruebas automatizadas locales y comentarios exploratorios de una persona usuaria que indicó relación de sus funciones con el proceso; observó la clasificación nocturna y las alertas. | La revisión fue limitada, no cubrió todas las opciones ni constituye aceptación institucional o evidencia suficiente para declarar TRL 5. |
 | Aportes por incremento | La matriz técnica enlaza incrementos con requisitos y pruebas. | Deisy y Lina deben confirmar sus aportes individuales y evidencias; no se atribuyen actividades sin confirmación. |
-| Entregables | El código está en el [repositorio público de NEXORA HR](https://github.com/lorena23234/Nexora). | El video de hasta 10 minutos y su enlace siguen pendientes. |
+| Entregables | El código está en el [repositorio público de NEXORA HR](https://github.com/lorena23234/Nexora); la grabación local del video ya se realizó. | Revisar el archivo, subirlo a una plataforma accesible al tutor y añadir el enlace de visualización. |
 
 Las pruebas automatizadas y la revisión exploratoria limitada de una persona
 usuaria no sustituyen el recorrido manual integral ni demuestran aceptación
