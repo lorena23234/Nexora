@@ -17,7 +17,12 @@ from modules.empleados import EmployeeService
 from modules.horas_extras import OvertimeService
 from modules.permisos import PermissionService
 from modules.reportes import ReportService
-from modules.validaciones import attendance_alerts, valid_date, valid_time
+from modules.validaciones import (
+    attendance_alerts,
+    attendance_day_night_minutes,
+    valid_date,
+    valid_time,
+)
 from views.estilos import IconActionButton, draw_brand_mark, draw_icon
 from views.ventana_principal import MainWindow
 
@@ -318,6 +323,49 @@ def test_attendance_flags_invalid_and_inconsistent_values(database):
     ) in alerts
 
 
+@pytest.mark.parametrize(
+    ("entry_time", "exit_time", "expected"),
+    [
+        ("08:00", "17:00", (540, 0)),
+        ("06:00", "19:00", (780, 0)),
+        ("19:00", "06:00", (0, 660)),
+        ("18:30", "19:30", (30, 30)),
+        ("05:30", "07:15", (75, 30)),
+        ("18:30", "06:30", (60, 660)),
+    ],
+)
+def test_attendance_day_night_classification(entry_time, exit_time, expected):
+    assert attendance_day_night_minutes(entry_time, exit_time) == expected
+
+
+@pytest.mark.parametrize(
+    ("entry_time", "exit_time"),
+    [
+        ("", "06:00"),
+        ("22:00", ""),
+        ("25:00", "06:00"),
+        ("08:00", "08:00"),
+    ],
+)
+def test_attendance_day_night_classification_requires_unambiguous_valid_times(
+    entry_time, exit_time
+):
+    assert attendance_day_night_minutes(entry_time, exit_time) is None
+
+
+def test_attendance_list_exposes_formatted_day_night_durations(database, employee):
+    service = AttendanceService(database)
+    service.add("TEST-001", "2026-10-25", "22:00", "06:00")
+
+    record = service.list()[0]
+
+    assert record["daytime_duration"] == "00:00"
+    assert record["nighttime_duration"] == "08:00"
+    assert record["work_date"] == "2026-10-25"
+    assert record["entry_time"] == "22:00"
+    assert record["exit_time"] == "06:00"
+
+
 def test_csv_import_associates_known_code_and_preserves_unknown(tmp_path, database, employee):
     csv_path = tmp_path / "asistencia_sintetica.csv"
     with csv_path.open("w", encoding="utf-8", newline="") as file:
@@ -387,6 +435,8 @@ def test_import_preview_mapping_duplicates_and_source_traceability(
     assert "Posible duplicidad: registro coincidente" in preview[0]["alerts"]
     assert any("Fecha no reconocida" in alert for alert in preview[1]["alerts"])
     assert preview[0]["entry_time"] == "08:00"
+    assert preview[0]["daytime_duration"] == "09:00"
+    assert preview[0]["nighttime_duration"] == "00:00"
 
     result = service.import_reviewed(
         dataset, mapping, "transcripcion_documental"
@@ -1047,10 +1097,25 @@ def test_csv_export_contains_filtered_records_and_observations(tmp_path, databas
         rows = list(csv.DictReader(file))
     assert len(rows) == 1
     assert rows[0]["codigo_trabajador"] == "TEST-001"
+    assert rows[0]["horas_diurnas"] == ""
+    assert rows[0]["horas_nocturnas"] == ""
     assert "Falta la hora de salida" in rows[0]["observaciones"]
     assert "nombre_empleado" not in rows[0]
     assert "fuente" not in rows[0]
     assert "Persona Ficticia" not in path.read_text(encoding="utf-8-sig")
+
+
+def test_csv_export_includes_day_night_durations(tmp_path, database, employee):
+    attendance = AttendanceService(database)
+    attendance.add("TEST-001", "2026-10-25", "22:00", "06:00")
+    path = tmp_path / "asistencia_nocturna.csv"
+
+    attendance.export_csv(path, attendance.list(employee_id=employee))
+
+    with path.open(encoding="utf-8-sig", newline="") as file:
+        row = next(csv.DictReader(file))
+    assert row["horas_diurnas"] == "00:00"
+    assert row["horas_nocturnas"] == "08:00"
 
 
 @pytest.mark.parametrize(
@@ -1079,6 +1144,8 @@ def test_legacy_report_exports_omit_names_and_free_text(kind, forbidden_fields):
 
     assert len(fields) == len(headers)
     assert forbidden_fields.isdisjoint(fields)
+    if kind == "Asistencia":
+        assert {"daytime_duration", "nighttime_duration"} <= set(fields)
 
 
 def test_employee_combo_displays_names_and_keeps_code_mapping():
@@ -1480,6 +1547,9 @@ def test_data_page_and_table_can_scroll_in_both_directions():
         assert int(tree.cget("height")) == 12
         assert tree.cget("yscrollcommand")
         assert tree.cget("xscrollcommand")
+        assert {"daytime_duration", "nighttime_duration"} <= set(
+            tree["columns"]
+        )
         for index in range(30):
             tree.insert("", "end", values=tuple(f"fila-{index}" for _ in range(10)))
         root.update()

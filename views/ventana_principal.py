@@ -614,6 +614,8 @@ class MainWindow:
                 ("work_date", "Fecha", 100),
                 ("entry_time", "Entrada", 85),
                 ("exit_time", "Salida", 85),
+                ("daytime_duration", "Horas diurnas", 100),
+                ("nighttime_duration", "Horas nocturnas", 110),
                 ("source", "Fuente", 120),
                 ("import_batch_id", "Lote", 55),
                 ("source_row", "Fila origen", 75),
@@ -653,6 +655,7 @@ class MainWindow:
             lambda record: (
                 record["id"], record["employee_code"], record["employee_name"],
                 record["work_date"], record["entry_time"], record["exit_time"],
+                record["daytime_duration"], record["nighttime_duration"],
                 record["source"], record["import_batch_id"] or "",
                 record["source_row"] or "", "; ".join(record["alerts"]),
             ),
@@ -825,12 +828,22 @@ class MainWindow:
         preview_container.pack(fill="both", expand=True)
         preview_container.columnconfigure(0, weight=1)
         preview_container.rowconfigure(0, weight=1)
-        preview_tree = ttk.Treeview(preview_container, columns=("employee", "date", "entry", "exit", "alerts"), show="headings", height=9)
+        preview_tree = ttk.Treeview(
+            preview_container,
+            columns=(
+                "employee", "date", "entry", "exit",
+                "daytime", "nighttime", "alerts",
+            ),
+            show="headings",
+            height=9,
+        )
         for key, label, width in (
             ("employee", "Empleado / código", 180),
             ("date", "Fecha (archivo → consulta)", 180),
             ("entry", "Entrada (archivo → consulta)", 170),
             ("exit", "Salida (archivo → consulta)", 170),
+            ("daytime", "Horas diurnas", 105),
+            ("nighttime", "Horas nocturnas", 115),
             ("alerts", "Validaciones para revisar", 420),
         ):
             preview_tree.heading(key, text=label)
@@ -838,7 +851,14 @@ class MainWindow:
         preview_tree.grid(row=0, column=0, sticky="nsew")
         preview_scroll = ttk.Scrollbar(preview_container, orient="vertical", command=preview_tree.yview)
         preview_scroll.grid(row=0, column=1, sticky="ns")
-        preview_tree.configure(yscrollcommand=preview_scroll.set)
+        preview_horizontal_scroll = ttk.Scrollbar(
+            preview_container, orient="horizontal", command=preview_tree.xview
+        )
+        preview_horizontal_scroll.grid(row=1, column=0, sticky="ew")
+        preview_tree.configure(
+            yscrollcommand=preview_scroll.set,
+            xscrollcommand=preview_horizontal_scroll.set,
+        )
         summary_label = ttk.Label(body, style="Subtitle.TLabel")
         summary_label.pack(anchor="w", pady=(5, 0))
         load_results: queue.Queue[tuple[int, ImportDataset | None, str | None]] = queue.Queue()
@@ -865,6 +885,8 @@ class MainWindow:
                         display_import_value(record["original_work_date"], record["work_date"]),
                         display_import_value(record["original_entry_time"], record["entry_time"]),
                         display_import_value(record["original_exit_time"], record["exit_time"]),
+                        record["daytime_duration"],
+                        record["nighttime_duration"],
                         "; ".join(record["alerts"]),
                     ),
                 )
@@ -1876,11 +1898,12 @@ class MainWindow:
             records = self.attendance.list(employee_id, start, end)
             columns = [
                 "employee_code", "employee_name", "work_date", "entry_time",
-                "exit_time", "source", "alerts",
+                "exit_time", "daytime_duration", "nighttime_duration",
+                "source", "alerts",
             ]
             headers = [
                 "Código", "Empleado", "Fecha", "Entrada", "Salida",
-                "Fuente", "Observaciones",
+                "Horas diurnas", "Horas nocturnas", "Fuente", "Observaciones",
             ]
             for record in records:
                 record["alerts"] = "; ".join(record["alerts"])
@@ -2006,8 +2029,14 @@ class MainWindow:
         kind = self.report_type.get()
         return {
             "Asistencia": (
-                ["employee_code", "work_date", "entry_time", "exit_time", "alerts"],
-                ["Código", "Fecha", "Entrada", "Salida", "Observaciones"],
+                [
+                    "employee_code", "work_date", "entry_time", "exit_time",
+                    "daytime_duration", "nighttime_duration", "alerts",
+                ],
+                [
+                    "Código", "Fecha", "Entrada", "Salida", "Horas diurnas",
+                    "Horas nocturnas", "Observaciones",
+                ],
             ),
             "Permisos": (
                 [

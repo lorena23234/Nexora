@@ -25,6 +25,26 @@ def valid_time(value: str) -> bool:
     return True
 
 
+def attendance_day_night_minutes(
+    entry_time: str, exit_time: str
+) -> tuple[int, int] | None:
+    if not valid_time(entry_time) or not valid_time(exit_time):
+        return None
+
+    start = int(entry_time[:2]) * 60 + int(entry_time[3:])
+    end = int(exit_time[:2]) * 60 + int(exit_time[3:])
+    if end == start:
+        return None
+    if end < start:
+        end += 24 * 60
+
+    daytime = sum(
+        max(0, min(end, day_start + 19 * 60) - max(start, day_start + 6 * 60))
+        for day_start in (0, 24 * 60)
+    )
+    return daytime, end - start - daytime
+
+
 def attendance_alerts(record: dict[str, Any]) -> list[str]:
     alerts: list[str] = []
     if not record.get("employee_id"):

@@ -227,7 +227,7 @@ laborales al entorno de pruebas.
 
 Instala `requirements.txt` antes de ejecutar la suite. Las pruebas usan bases
 de datos temporales y registros ficticios. La ejecución local más reciente de
-`python -m pytest -q` finalizó con **67 aprobadas, 0 fallidas y 0 omitidas**.
+`python -m pytest -q` finalizó con **79 aprobadas, 0 fallidas y 0 omitidas**.
 Los resultados son pruebas automatizadas; no equivalen a validación manual con
 usuarios ni a las ejecuciones realizadas en otros entornos.
 Los casos representativos y sus resultados incluyen:
@@ -241,9 +241,10 @@ Los casos representativos y sus resultados incluyen:
 | CP-05 | Solicitud de permiso ficticia en estado pendiente | Se guarda y se muestra para revisión, sin dar por registrada una aprobación; aprobado. |
 | CP-06 | Hora extra ficticia sin autorización registrada | Se genera una alerta; no se calcula recargo ni pago; aprobado. |
 | CP-07 | Exportación de registros y observaciones sintéticas | Se conserva el resultado de consulta en CSV/Excel; aprobado. |
-| CP-08 | Entrada sintética 22:00 y salida 06:00 | Se conserva la fecha y las horas; se advierte que puede ser un cruce de medianoche o una inconsistencia, sin cambiar el dato; aprobado automáticamente. La interpretación operativa sigue pendiente. |
+| CP-08 | Entrada sintética 22:00 y salida 06:00 | Se conserva la fecha y las horas; se advierte el posible cruce de medianoche y la clasificación derivada muestra 00:00 diurnas y 08:00 nocturnas. La persona responsable debe confirmar la interpretación operativa. |
 | CP-09 | Dos intervalos distintos del mismo empleado y día | Se conservan ambos sin marcarlos como duplicados exactos; aprobado automáticamente. La legitimidad del caso debe confirmarla quien administra el proceso. |
 | CP-10 | Importación de horas con espacios en el valor original | La consulta usa la hora normalizada y la trazabilidad conserva el valor original importado; aprobado automáticamente. |
+| CP-11 | Clasificación horaria en límites 06:00/19:00, periodos mixtos y cruce de medianoche | Se calculan minutos diurnos y nocturnos como dato derivado, sin alterar marcaciones ni liquidar nómina; aprobado automáticamente. |
 
 La suite también cubre mapeo, vista previa y trazabilidad minimizada de
 importaciones sintéticas, exclusión de columnas personales, normalización no
@@ -267,9 +268,28 @@ forma de registrar una corrección después de importar requiere una decisión
 documentada del responsable del proceso antes de implementar o aceptar ese
 flujo.
 
+### Clasificación informativa de horas diurnas y nocturnas
+
+La aplicación presenta una clasificación derivada de la duración entre las
+marcaciones: diurna de 06:00 a 19:00 y nocturna de 19:00 a 06:00 del día
+siguiente, de acuerdo con el artículo 160 del Código Sustantivo del Trabajo,
+modificado por el artículo 10 de la
+[Ley 2466 de 2025](https://www.funcionpublica.gov.co/eva/gestornormativo/norma.php?i=260676).
+Los límites se tratan como intervalos: 06:00 inicia el tramo diurno y 19:00
+inicia el nocturno. Una salida anterior a la entrada se calcula como cruce al
+día siguiente solo para esta clasificación; la fecha y las horas originales
+se conservan y la alerta de revisión permanece.
+
+El resultado se muestra en formato `hh:mm` en la vista previa, la consulta y
+las exportaciones. Es tiempo bruto entre marcaciones: no descuenta pausas ni
+determina recargos, horas extra, pagos o liquidación de nómina. Si las horas
+faltan, no son válidas o son iguales, la clasificación queda vacía para no
+presentar un cálculo ambiguo. La interpretación de jornadas y las políticas
+de pausas deben confirmarse con la persona responsable del proceso.
+
 ### Limitaciones de validación y estado TRL
 
-No se declara alcanzado ni certificado TRL 5. Las 67 pruebas automatizadas se
+No se declara alcanzado ni certificado TRL 5. Las 79 pruebas automatizadas se
 ejecutan localmente con datos sintéticos; por sí solas no demuestran validación
 en un entorno relevante. La evaluación de Fase 3 ubicó el trabajo cerca de TRL 2,
 en avance hacia TRL 3. La implementación y las pruebas locales actuales aportan
@@ -363,10 +383,12 @@ En la interfaz, crea primero el empleado ficticio `DEMO-UI-001` (por ejemplo,
 “Empleado Sintético UI”), importa el CSV desde Asistencia, revisa el mapeo y la
 vista previa, clasifica la fuente como datos sintéticos y confirma. Comprueba
 las tres filas; las dos franjas distintas del 19 de noviembre no deben
-marcarse como duplicado exacto. La fila 22:00–06:00 debe conservar la fecha y
-las horas e indicar posible cruce de medianoche o inconsistencia. Cambia de
-sección y regresa, aplica un filtro y exporta el resultado. Registra el
-resultado observado; no describas pasos no ejecutados como aprobados.
+marcarse como duplicado exacto y cada una debe mostrar 04:00 diurnas y 00:00
+nocturnas. La fila 22:00–06:00 debe conservar la fecha y las horas, mostrar
+00:00 diurnas y 08:00 nocturnas e indicar el posible cruce de medianoche o
+inconsistencia. Cambia de sección y regresa, aplica un filtro y exporta el
+resultado. Registra el resultado observado; no describas pasos no ejecutados
+como aprobados.
 
 Antes de una sesión con usuarios, cierra la aplicación y realiza el respaldo
 mediante la API `sqlite3.Connection.backup()` a un archivo distinto. Verifica

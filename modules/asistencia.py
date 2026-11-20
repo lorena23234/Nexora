@@ -12,7 +12,12 @@ from typing import Any
 from zipfile import BadZipFile
 
 from database import Database
-from modules.validaciones import attendance_alerts, duplicate_key, valid_date
+from modules.validaciones import (
+    attendance_alerts,
+    attendance_day_night_minutes,
+    duplicate_key,
+    valid_date,
+)
 
 
 SOURCE_TYPES = {
@@ -592,6 +597,7 @@ class AttendanceService:
                     )
                 },
             }
+            self._add_day_night_durations(record)
             record["raw_data"]["_original_row"] = list(
                 record["raw_data"].values()
             )
@@ -775,6 +781,7 @@ class AttendanceService:
 
         seen: dict[tuple[str, str, str, str], list[int]] = {}
         for index, record in enumerate(records):
+            self._add_day_night_durations(record)
             alerts = attendance_alerts(record)
             key = duplicate_key(record)
             if key[0] and key[1] and (key[2] or key[3]):
@@ -805,6 +812,8 @@ class AttendanceService:
                     "fecha",
                     "entrada",
                     "salida",
+                    "horas_diurnas",
+                    "horas_nocturnas",
                     "observaciones",
                 )
             )
@@ -815,9 +824,24 @@ class AttendanceService:
                         record["work_date"],
                         record["entry_time"],
                         record["exit_time"],
+                        record.get("daytime_duration", ""),
+                        record.get("nighttime_duration", ""),
                         "; ".join(record["alerts"]),
                     )
                 )
+
+    @staticmethod
+    def _add_day_night_durations(record: dict[str, Any]) -> None:
+        durations = attendance_day_night_minutes(
+            str(record.get("entry_time", "")),
+            str(record.get("exit_time", "")),
+        )
+        if durations is None:
+            record["daytime_duration"] = ""
+            record["nighttime_duration"] = ""
+            return
+        record["daytime_duration"] = f"{durations[0] // 60:02}:{durations[0] % 60:02}"
+        record["nighttime_duration"] = f"{durations[1] // 60:02}:{durations[1] % 60:02}"
 
     @staticmethod
     def validate_period(start_date: str, end_date: str) -> None:
