@@ -339,13 +339,41 @@ con datos sintéticos; no acreditan por sí mismas un nivel TRL.
 | Jornada que cruza medianoche | Caso sintético 22:00–06:00: se conserva la fecha informada y se genera una alerta neutral; no se deduce otra fecha. | Acordar con la persona responsable cómo interpretar la jornada y registrar la decisión del usuario. |
 | Repetición legítima y duplicidad | Los registros exactos coincidentes se conservan y señalan; dos intervalos distintos en el día no se clasifican como duplicados exactos. | Confirmar los criterios del proceso para repetición legítima y duplicados. |
 | Corrección de registros | La importación conserva valores originales y normalizados. La interfaz no incluye edición de marcaciones. | Definir un flujo de corrección trazable y validarlo antes de implementarlo o usarlo. |
-| Recorrido de interfaz y recuperación | Hay cobertura automatizada de importación, vista previa, persistencia, consultas y exportaciones. | Sigue pendiente una sesión manual observada de extremo a extremo y acordar acceso, respaldo y recuperación de la base local. |
+| Recorrido de interfaz | Hay cobertura automatizada de importación, vista previa, persistencia, consultas y exportaciones. Se preparó un CSV manual sintético. | Sigue pendiente una sesión manual observada de extremo a extremo. |
+| Respaldo y recuperación | Se ejecutó una copia y restauración SQLite en una base temporal sintética; `integrity_check` dio `ok` y se recuperaron 1 empleado, 3 asistencias y 1 lote. | Acordar acceso y retención con el responsable; la prueba no fue una recuperación manual de la interfaz ni de datos de producción. |
 | Validación y aceptación | Pruebas automatizadas locales con datos sintéticos. | Sesión autorizada con usuarios representativos en un entorno pertinente; registrar observaciones, defectos, ajustes y aceptación real. |
 | Aportes por incremento | La matriz técnica enlaza incrementos con requisitos y pruebas. | Deisy y Lina deben confirmar sus aportes individuales y evidencias; no se atribuyen actividades sin confirmación. |
 | Entregables | El código está en el [repositorio público de NEXORA HR](https://github.com/lorena23234/Nexora). | El video de hasta 10 minutos y su enlace siguen pendientes. |
 
 Las pruebas nuevas o automatizadas no sustituyen el recorrido manual ni la
 validación con usuarios. El estado TRL 5 no se declara demostrado.
+
+### Preparación del recorrido manual sintético
+
+El archivo [asistencia_manual_sintetica.csv](tests/fixtures/asistencia_manual_sintetica.csv)
+contiene tres filas ficticias. Para mantener la prueba aislada, en PowerShell
+define una base temporal y ejecuta la aplicación:
+
+```powershell
+$env:NEXORA_HR_DB_PATH = Join-Path $env:TEMP 'nexora_hr_ui_synthetic_20261120.db'
+.\.venv\Scripts\python.exe main.py
+```
+
+En la interfaz, crea primero el empleado ficticio `DEMO-UI-001` (por ejemplo,
+“Empleado Sintético UI”), importa el CSV desde Asistencia, revisa el mapeo y la
+vista previa, clasifica la fuente como datos sintéticos y confirma. Comprueba
+las tres filas; las dos franjas distintas del 19 de noviembre no deben
+marcarse como duplicado exacto. La fila 22:00–06:00 debe conservar la fecha y
+las horas e indicar posible cruce de medianoche o inconsistencia. Cambia de
+sección y regresa, aplica un filtro y exporta el resultado. Registra el
+resultado observado; no describas pasos no ejecutados como aprobados.
+
+Antes de una sesión con usuarios, cierra la aplicación y realiza el respaldo
+mediante la API `sqlite3.Connection.backup()` a un archivo distinto. Verifica
+`PRAGMA integrity_check` y restaura el respaldo en otra ruta temporal, nunca
+sobre la base original. Esta copia/restauración se probó con los datos
+sintéticos anteriores; el acceso, la retención y el procedimiento para una
+sesión del proceso objetivo aún requieren acuerdo con la persona responsable.
 
 ## Repositorio de GitHub
 

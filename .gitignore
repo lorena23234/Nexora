@@ -14,6 +14,7 @@ reports/
 *.db-shm
 *.db-wal
 *.csv
+!tests/fixtures/asistencia_manual_sintetica.csv
 *.xlsx
 *.xls
 *.docx
