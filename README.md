@@ -257,10 +257,26 @@ protección al eliminar registros con historial. La prueba visual sintética
 comprueba el dibujo del logotipo e iconos; otra verifica que hover no cambie
 color ni geometría del botón. También incluye informes
 filtrados de permisos y horas extra que omiten nombres y texto libre sensible.
-Estas pruebas demuestran comportamiento funcional en un
-entorno local controlado; no son pruebas con datos reales ni validación con
-usuarios o en el entorno de la empresa. No se ha realizado una prueba manual
-integral de la interfaz de escritorio en esta actualización.
+Estas pruebas demuestran comportamiento funcional en un entorno local
+controlado; no son pruebas con datos reales ni demuestran por sí mismas
+validación en un entorno relevante.
+
+### Revisión manual exploratoria
+
+El 20 de noviembre de 2026, una persona usuaria que indicó que sus funciones
+se relacionan con asistencia, permisos y horas extra revisó el prototipo con
+datos ficticios. La revisión fue limitada: observó la clasificación de una
+jornada 22:00–06:00 como nocturna y las alertas de datos que requieren
+revisión. Comentó que le pareció clara esa clasificación, entendió que el
+sistema busca facilitar la gestión de asistencias, permisos y horas extra, y
+sugirió que las alertas expliquen el problema y qué revisar, y que la consulta
+de horas trabajadas sea sencilla. Indicó que no revisó todas las opciones.
+
+Este comentario es una revisión exploratoria de uso con datos ficticios, no
+una aceptación institucional, una evaluación de todos los flujos ni una
+validación integral de importación a exportación. La prueba manual completa
+de la interfaz sigue pendiente; no se atribuyen a la persona usuaria tareas
+que no reportó haber realizado.
 
 La aplicación no ofrece una operación para editar una marcación existente.
 En importaciones se conserva el valor original junto al valor normalizado; la
@@ -354,19 +370,21 @@ con datos sintéticos; no acreditan por sí mismas un nivel TRL.
 
 ## Seguimiento de la retroalimentación del tutor
 
-| Tema | Evidencia automatizada disponible | Pendiente de validación |
+| Tema | Evidencia disponible | Pendiente de validación |
 |---|---|---|
 | Jornada que cruza medianoche | Caso sintético 22:00–06:00: se conserva la fecha informada y se genera una alerta neutral; no se deduce otra fecha. | Acordar con la persona responsable cómo interpretar la jornada y registrar la decisión del usuario. |
 | Repetición legítima y duplicidad | Los registros exactos coincidentes se conservan y señalan; dos intervalos distintos en el día no se clasifican como duplicados exactos. | Confirmar los criterios del proceso para repetición legítima y duplicados. |
 | Corrección de registros | La importación conserva valores originales y normalizados. La interfaz no incluye edición de marcaciones. | Definir un flujo de corrección trazable y validarlo antes de implementarlo o usarlo. |
-| Recorrido de interfaz | Hay cobertura automatizada de importación, vista previa, persistencia, consultas y exportaciones. Se preparó un CSV manual sintético. | Sigue pendiente una sesión manual observada de extremo a extremo. |
+| Recorrido de interfaz | Hay cobertura automatizada de importación, vista previa, persistencia, consultas y exportaciones; también se realizó una revisión exploratoria limitada con datos ficticios. | Sigue pendiente el recorrido observado de extremo a extremo, desde la importación hasta la exportación. |
 | Respaldo y recuperación | Se ejecutó una copia y restauración SQLite en una base temporal sintética; `integrity_check` dio `ok` y se recuperaron 1 empleado, 3 asistencias y 1 lote. | Acordar acceso y retención con el responsable; la prueba no fue una recuperación manual de la interfaz ni de datos de producción. |
-| Validación y aceptación | Pruebas automatizadas locales con datos sintéticos. | Sesión autorizada con usuarios representativos en un entorno pertinente; registrar observaciones, defectos, ajustes y aceptación real. |
+| Validación y aceptación | Pruebas automatizadas locales y comentarios exploratorios de una persona usuaria que indicó relación de sus funciones con el proceso; observó la clasificación nocturna y las alertas. | La revisión fue limitada, no cubrió todas las opciones ni constituye aceptación institucional o evidencia suficiente para declarar TRL 5. |
 | Aportes por incremento | La matriz técnica enlaza incrementos con requisitos y pruebas. | Deisy y Lina deben confirmar sus aportes individuales y evidencias; no se atribuyen actividades sin confirmación. |
 | Entregables | El código está en el [repositorio público de NEXORA HR](https://github.com/lorena23234/Nexora). | El video de hasta 10 minutos y su enlace siguen pendientes. |
 
-Las pruebas nuevas o automatizadas no sustituyen el recorrido manual ni la
-validación con usuarios. El estado TRL 5 no se declara demostrado.
+Las pruebas automatizadas y la revisión exploratoria limitada de una persona
+usuaria no sustituyen el recorrido manual integral ni demuestran aceptación
+institucional o validación en el entorno relevante. El estado TRL 5 no se
+declara demostrado.
 
 ### Preparación del recorrido manual sintético
 
@@ -379,7 +397,8 @@ $env:NEXORA_HR_DB_PATH = Join-Path $env:TEMP 'nexora_hr_ui_synthetic_20261120.db
 .\.venv\Scripts\python.exe main.py
 ```
 
-En la interfaz, crea primero el empleado ficticio `DEMO-UI-001` (por ejemplo,
+Para completar el recorrido integral que aún está pendiente, crea primero el
+empleado ficticio `DEMO-UI-001` (por ejemplo,
 “Empleado Sintético UI”), importa el CSV desde Asistencia, revisa el mapeo y la
 vista previa, clasifica la fuente como datos sintéticos y confirma. Comprueba
 las tres filas; las dos franjas distintas del 19 de noviembre no deben
